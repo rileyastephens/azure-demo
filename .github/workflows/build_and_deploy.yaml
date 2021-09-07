@@ -1,0 +1,133 @@
+name: Build and Deploy
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  Build-App:
+    runs-on: windows-latest
+    env:
+      BUILD_CONFIGURATION: "Release"
+    steps:
+    - uses: actions/checkout@v2
+      
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v1
+
+    - name: Setup NuGet
+      uses: NuGet/setup-nuget@v1.0.5
+
+    - name: Restore NuGet packages
+      run: nuget restore aspnet-get-started.sln
+
+    - name: Build and Deploy
+      run: |
+        msbuild aspnet-get-started.sln /p:Configuration=${{ env.BUILD_CONFIGURATION }} /p:DeployOnBuild=true
+
+    - name: Save to Artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: field-reporting-build
+        path: '.\aspnet-get-started\obj\Release\Package\'
+
+  Deploy-to-Dev:
+    environment: Development
+    needs: Build-App
+    runs-on: 'ubuntu-latest'
+    steps:
+      - name: Create Artifact Directory
+        run: mkdir field-reporting-build
+
+      - name: Download Artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: field-reporting-build
+          path: ./field-reporting-build
+
+      - name: Login to Azure
+        uses: azure/login@v1
+        with:
+          creds: '{"clientId":"${{ secrets.SPN_CLIENT_ID }}","clientSecret":"${{ secrets.SPN_CLIENT_SECRET }}","subscriptionId":"${{ secrets.ENV_SUBSCRIPTION_ID }}","tenantId":"${{ secrets.TENANT_ID }}"}'
+
+      - name: Publish Artifacts to Azure
+        uses: Azure/webapps-deploy@v2
+        with:
+          app-name: omf-fr-dev
+          package: ./field-reporting-build/PackageTmp
+          slot-name: dev
+
+      - uses: Azure/get-keyvault-secrets@v1
+        with:
+          keyvault: "kv-omf-demo"
+          secrets: app-server, test
+        id: get-secrets
+
+      - name: Set Web App Settings
+        uses: Azure/appservice-settings@v1
+        with:
+          app-name: 'omf-fr-dev'
+          slot-name: 'dev'
+          app-settings-json: |
+            [
+              {
+                  "name": "app-server",
+                  "value": "${{ steps.get-fr-secrets.outputs.app-server }}",
+                  "slotSetting": true
+              },
+              {
+                  "name": "as-fin1",
+                  "value": "${{ steps.get-fr-secrets.outputs.test }}",
+                  "slotSetting": true
+              }
+            ]
+  Deploy-to-QA:
+    environment: QA
+    needs: Build-App
+    runs-on: 'ubuntu-latest'
+    steps:
+      - name: Create Artifact Directory
+        run: mkdir field-reporting-build
+
+      - name: Download Artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: field-reporting-build
+          path: ./field-reporting-build
+
+      - name: Login to Azure
+        uses: azure/login@v1
+        with:
+          creds: '{"clientId":"${{ secrets.SPN_CLIENT_ID }}","clientSecret":"${{ secrets.SPN_CLIENT_SECRET }}","subscriptionId":"${{ secrets.ENV_SUBSCRIPTION_ID }}","tenantId":"${{ secrets.TENANT_ID }}"}'
+
+      - name: Publish Artifacts to Azure
+        uses: Azure/webapps-deploy@v2
+        with:
+          app-name: omf-fr-dev
+          package: ./field-reporting-build/PackageTmp
+          slot-name: qa
+
+      - uses: Azure/get-keyvault-secrets@v1
+        with:
+          keyvault: "kv-omf-demo"
+          secrets: app-server, test
+        id: get-secrets
+
+      - name: Set Web App Settings
+        uses: Azure/appservice-settings@v1
+        with:
+          app-name: 'omf-fr-dev'
+          slot-name: 'qa'
+          app-settings-json: |
+            [
+              {
+                  "name": "app-server",
+                  "value": "${{ steps.get-fr-secrets.outputs.app-server }}",
+                  "slotSetting": true
+              },
+              {
+                  "name": "as-fin1",
+                  "value": "${{ steps.get-fr-secrets.outputs.test }}",
+                  "slotSetting": true
+              }
+            ]
