@@ -73,12 +73,12 @@ jobs:
               {
                   "name": "app-server",
                   "value": "${{ steps.get-secrets.outputs.app-server }}",
-                  "slotSetting": true
+                  "slotSetting": false
               },
               {
                   "name": "as-fin1",
                   "value": "${{ steps.get-secrets.outputs.test }}",
-                  "slotSetting": true
+                  "slotSetting": false
               }
             ]
   Deploy-to-QA:
@@ -123,11 +123,11 @@ jobs:
               {
                   "name": "app-server",
                   "value": "${{ steps.get-secrets.outputs.app-server }}",
-                  "slotSetting": true
+                  "slotSetting": false
               },
               {
                   "name": "as-fin1",
                   "value": "${{ steps.get-secrets.outputs.test }}",
-                  "slotSetting": true
+                  "slotSetting": false
               }
             ]
