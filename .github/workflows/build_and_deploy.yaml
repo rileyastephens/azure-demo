@@ -72,18 +72,18 @@ jobs:
             [
               {
                   "name": "app-server",
-                  "value": "${{ steps.get-fr-secrets.outputs.app-server }}",
+                  "value": "${{ steps.get-secrets.outputs.app-server }}",
                   "slotSetting": true
               },
               {
                   "name": "as-fin1",
-                  "value": "${{ steps.get-fr-secrets.outputs.test }}",
+                  "value": "${{ steps.get-secrets.outputs.test }}",
                   "slotSetting": true
               }
             ]
   Deploy-to-QA:
     environment: QA
-    needs: Build-App
+    needs: [ Build-App, Deploy-to-Dev ]
     runs-on: 'ubuntu-latest'
     steps:
       - name: Create Artifact Directory
@@ -122,12 +122,12 @@ jobs:
             [
               {
                   "name": "app-server",
-                  "value": "${{ steps.get-fr-secrets.outputs.app-server }}",
+                  "value": "${{ steps.get-secrets.outputs.app-server }}",
                   "slotSetting": true
               },
               {
                   "name": "as-fin1",
-                  "value": "${{ steps.get-fr-secrets.outputs.test }}",
+                  "value": "${{ steps.get-secrets.outputs.test }}",
                   "slotSetting": true
               }
             ]
