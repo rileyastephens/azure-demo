@@ -1,8 +1,12 @@
 name: Build and Deploy
 
 on:
-  push:
-    branches: [ main ]
+  workflow_dispatch:
+    input:
+      Build:
+        description: 'Build the application'
+        required: true
+        default: false
 
 jobs:
   Build-App:
@@ -30,7 +34,6 @@ jobs:
       with:
         name: field-reporting-build
         path: '.\aspnet-get-started\obj\Release\Package\'
-
   Deploy-to-Dev:
     environment: Development
     needs: Build-App
