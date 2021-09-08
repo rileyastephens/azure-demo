@@ -2,11 +2,11 @@ name: Build and Deploy
 
 on:
   workflow_dispatch:
-    input:
+    inputs:
       Build:
         description: 'Build the application'
         required: true
-        default: false
+        default: 'false'
 
 jobs:
   Build-App:
